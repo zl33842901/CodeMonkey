@@ -1,0 +1,430 @@
+﻿<el-row style="padding:3px;margin:3px;">
+    <el-breadcrumb separator="/">
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+        <el-breadcrumb-item>Depart</el-breadcrumb-item>
+    </el-breadcrumb>
+</el-row>
+<el-row style="width: 100%;margin: 5px 0 5px 0;background-color:#ddd;padding:4px 0 4px 0;" :gutter="10">
+    <el-col :span="3">
+        <el-input type="text" placeholder="请输入关键词" v-model="Query.Key">
+        </el-input>
+    </el-col>
+
+    <el-col :span="4">
+        <el-button type="primary" v-on:click="QueryClick">查询</el-button>
+        <el-button type="primary" v-on:click="InitAdd">新增</el-button>
+    </el-col>
+</el-row>
+<el-table :data="tableData" style="width: 100%" class="spHeight">
+    <el-table-column label="Id" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.Id }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="Name" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.Name }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="NameChain" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.NameChain }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="BudgetDepartId" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.BudgetDepartId }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="NameChainOfBudgetDepart" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.NameChainOfBudgetDepart }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="ParentId" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.ParentId }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="ManagerCode" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.ManagerCode }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="DepartLevel" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.DepartLevel }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="BusinessDirection" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.BusinessDirection }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="Deleted" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.Deleted }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="RelationBodies" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.RelationBodies }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="ShadowChain" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.ShadowChain }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="AllSubIds" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.AllSubIds }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="操作" width="90">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">
+                <el-button type="primary" v-on:click="InitEdit(scope.row)">编辑</el-button>
+            </span>
+        </template>
+    </el-table-column>
+    <el-table-column label="" width="90">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">
+                <el-button type="danger" v-on:click="DeleteModel(scope.row)">删除</el-button>
+            </span>
+        </template>
+    </el-table-column>
+    <el-table-column></el-table-column>
+</el-table>
+<el-row style="width: 100%;margin: 5px 0 5px 0;background-color:#fff;padding:4px 0 4px 0;" :gutter="10">
+    <el-pagination style="width:750px;float:left;" background v-on:size-change="handleSizeChange" v-on:current-change="handleCurrentChange" :current-page="Query.PageIndex"
+                   layout="total, prev, pager, next, sizes, jumper"
+                   :page-sizes="pager.pageSizes"
+                   :total="pager.total">
+    </el-pagination>
+    <img src="~/images/excel.gif" style="float:left;margin:7px;cursor:pointer;" v-on:click="ExportExcel" />
+</el-row>
+@section Dialogs{
+    <el-dialog title="编辑Depart" :visible.sync="showEdit" width="666px" append-to-body :close-on-click-modal="false" :before-close="closeDialog">
+        <el-form :model="EditModel" label-width="120px;">
+            <el-form-item label="Id">
+                <el-col :span="20">
+                    <el-input placeholder="Id" v-model="EditModel.Id" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="Name">
+                <el-col :span="20">
+                    <el-input placeholder="Name" v-model="EditModel.Name" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="NameChain">
+                <el-col :span="20">
+                    <el-input placeholder="NameChain" v-model="EditModel.NameChain" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="BudgetDepartId">
+                <el-col :span="20">
+                    <el-input placeholder="BudgetDepartId" v-model="EditModel.BudgetDepartId" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="NameChainOfBudgetDepart">
+                <el-col :span="20">
+                    <el-input placeholder="NameChainOfBudgetDepart" v-model="EditModel.NameChainOfBudgetDepart" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="ParentId">
+                <el-col :span="20">
+                    <el-input placeholder="ParentId" v-model="EditModel.ParentId" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="ManagerCode">
+                <el-col :span="20">
+                    <el-input placeholder="ManagerCode" v-model="EditModel.ManagerCode" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="DepartLevel">
+                <el-col :span="20">
+                    <el-input placeholder="DepartLevel" v-model="EditModel.DepartLevel" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="BusinessDirection">
+                <el-col :span="20">
+                    <el-input placeholder="BusinessDirection" v-model="EditModel.BusinessDirection" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="Deleted">
+                <el-col :span="20">
+                    <el-switch v-model="EditModel.Deleted" active-color="#13ce66" inactive-color="#ff4949" active-text="是" inactive-text="否"></el-switch>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="RelationBodies">
+                <el-col :span="20">
+                    <el-input placeholder="RelationBodies" id="TxtRelationBodies" v-model="EditModel.RelationBodies"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="ShadowChain">
+                <el-col :span="20">
+                    <el-input placeholder="ShadowChain" v-model="EditModel.ShadowChain" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="AllSubIds">
+                <el-col :span="20">
+                    <el-input placeholder="AllSubIds" v-model="EditModel.AllSubIds" type="text"></el-input>
+                </el-col>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button v-on:click="EditCacel">取 消</el-button>
+            <el-button type="primary" v-on:click="SubmitModel">确 定</el-button>
+        </div>
+    </el-dialog>
+}
+@section Scripts{
+    <script src="~/lib/tinymce/tinymce.min.js"></script>
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                activeIndex: "Depart",
+                @await Html.PartialAsync("CommonData")
+                Query: {
+                    Key:'',
+                    PageSize: 10,
+                    PageIndex: 1
+                },
+                tableData: [],
+                pager: {
+                    pageSizes: [10, 20, 30, 50, 100, 500],
+                    total: 0
+                },
+                exportColumn: {//导出Excel时的列                    Id: "Id",
+                    Name: "Name",
+                    NameChain: "NameChain",
+                    BudgetDepartId: "BudgetDepartId",
+                    NameChainOfBudgetDepart: "NameChainOfBudgetDepart",
+                    ParentId: "ParentId",
+                    ManagerCode: "ManagerCode",
+                    DepartLevel: "DepartLevel",
+                    BusinessDirection: "BusinessDirection",
+                    Deleted: "Deleted",
+                    RelationBodies: "RelationBodies",
+                    ShadowChain: "ShadowChain",
+                    AllSubIds: "AllSubIds"
+                },
+                showEdit: false,
+                EditModel: {
+                    Id: '',
+                    Name: '',
+                    NameChain: '',
+                    BudgetDepartId: '',
+                    NameChainOfBudgetDepart: '',
+                    ParentId: '',
+                    ManagerCode: '',
+                    DepartLevel: '',
+                    BusinessDirection: '',
+                    Deleted: false,
+                    RelationBodies: '',
+                    ShadowChain: '',
+                    AllSubIds: ''
+                },
+                EditMode: false,
+            },
+            methods: {
+                ExportExcel: function () {
+                    var form = $("<form>");//定义一个form表单
+                    form.attr("style", "display:none");
+                    form.attr("target", "");
+                    form.attr("method", "post");
+                    form.attr("action", ExcelExportUrl);
+                    var hdxls = $("<input>");
+                    hdxls.attr("type", "hidden");
+                    hdxls.attr("name", "column");
+                    hdxls.attr("value", JSON.stringify(this.exportColumn));
+                    var hdstore = $("<input>");
+                    hdstore.attr("type", "hidden");
+                    hdstore.attr("name", "data");
+                    hdstore.attr("value", JSON.stringify(this.tableData));
+                    $("body").append(form);//将表单放置在web中
+                    form.append(hdstore);
+                    form.append(hdxls);
+                    form.submit();//表单提交
+                    //console.log(form)
+                },
+                InitAdd: function () {
+                    this.EditModel.Id = '';
+                    this.EditModel.Name = '';
+                    this.EditModel.NameChain = '';
+                    this.EditModel.BudgetDepartId = '';
+                    this.EditModel.NameChainOfBudgetDepart = '';
+                    this.EditModel.ParentId = '';
+                    this.EditModel.ManagerCode = '';
+                    this.EditModel.DepartLevel = '';
+                    this.EditModel.BusinessDirection = '';
+                    this.EditModel.Deleted = false;
+                    this.EditModel.RelationBodies = '';
+                    this.EditModel.ShadowChain = '';
+                    this.EditModel.AllSubIds = '';
+                    this.showEdit = true;
+                    this.EditMode = false;
+
+                    var that = this;
+                    this.$nextTick(function () { that.InitTinymce(); });
+                },
+                InitEdit: function (m) {
+                    this.EditModel.Id = m.Id;
+                    this.EditModel.Name = m.Name;
+                    this.EditModel.NameChain = m.NameChain;
+                    this.EditModel.BudgetDepartId = m.BudgetDepartId;
+                    this.EditModel.NameChainOfBudgetDepart = m.NameChainOfBudgetDepart;
+                    this.EditModel.ParentId = m.ParentId;
+                    this.EditModel.ManagerCode = m.ManagerCode;
+                    this.EditModel.DepartLevel = m.DepartLevel;
+                    this.EditModel.BusinessDirection = m.BusinessDirection;
+                    this.EditModel.Deleted = m.Deleted;
+                    this.EditModel.RelationBodies = m.RelationBodies;
+                    this.EditModel.ShadowChain = m.ShadowChain;
+                    this.EditModel.AllSubIds = m.AllSubIds;
+                    this.showEdit = true;
+                    this.EditMode = true;
+
+                    var that = this;
+                    this.$nextTick(function () { that.InitTinymce(); });
+                },
+                LoadEditData: function () {//编辑提交时，从数据里加载到MODEL
+                    this.EditModel.RelationBodies = tinymce.editors[0].getContent();
+                },
+                SubmitModel: function () {
+                    if (this.EditMode) {
+                        this.EditSubmit();
+                    } else {
+                        this.AddSubmit();
+                    }
+                },
+                EditSubmit: function () {
+                    this.LoadEditData();
+                    var that = this;
+                    JsonAjaxPost("/Depart/Edit",
+                        this.EditModel, function (data) {
+                            if (data.result) {
+                                that.DestroyTinymce();
+                                that.showEdit = false;
+                                that.$message({
+                                    message: '操作成功',
+                                    type: 'success'
+                                });
+                                that.GetData();
+                            } else {
+                                that.$message.error("出错了：" + data.message);
+                            }
+                        });
+                },
+                AddSubmit: function () {
+                    if (this.submitting == true) {
+                        this.$message.error("正在提交数据，请稍候。");
+                        return;
+                    }
+                    this.submitting = true;
+                    this.LoadEditData();
+                    //this.EditModel.Deleted = false;
+                    var that = this;
+                    JsonAjaxPost("/Depart/Add",
+                        this.EditModel, function (data) {
+                            if (data.result) {
+                                that.DestroyTinymce();
+                                that.showEdit = false;
+                                that.$message({
+                                    message: '操作成功',
+                                    type: 'success'
+                                });
+                                that.GetData();
+                            } else {
+                                that.$message.error("出错了：" + data.message);
+                            }
+                            that.submitting = false;
+                        });
+                },
+                GetData: function () {
+                    var that = this;
+                    CommonAjaxPost("/Depart/GetListData",
+                        this.Query,
+                        function (data) {
+                            if (data.result) {
+                                that.tableData = data.listData;
+                                that.pager.total = data.total;
+                            } else {
+                                that.$message.error("出错了：" + data.message);
+                            }
+                        });
+                },
+                QueryClick: function () {
+                    this.Query.PageIndex = 1;
+                    this.GetData();
+                },
+                handleSizeChange: function (size) {
+                    this.Query.PageSize = size;
+                    this.GetData();
+                },
+                handleCurrentChange: function (pageIndex) {
+                    this.Query.PageIndex = pageIndex;
+                    this.GetData();
+                },
+                @await Html.PartialAsync("CommonMethod")
+                DeleteModel: function (m) {
+                    var that = this;
+                    this.$confirm('确定要删除此记录吗?', '提示', {
+                      confirmButtonText: '确定',
+                      cancelButtonText: '取消',
+                      type: 'warning'
+                    }).then(function() {
+                        that.DoDelete(m);
+                    }).catch(function() {
+                    });
+                },
+                DoDelete: function (m) {
+                    var that = this;
+                    CommonAjaxPost("/Depart/Delete/" + m.Id, {}, function (data) {
+                        if (data.result) {
+                            that.$message({
+                                type: 'success',
+                                message: '删除成功!'
+                            });
+                            that.GetData();
+                        } else {
+                            that.$message.error("出错了：" + data.message);
+                        }
+                    });
+                },
+                InitTinymce: function () {
+                    tinymce.init({
+                        selector: '#TxtRelationBodies',
+                        language: 'zh_CN',
+                        plugins: plugins,
+                        toolbar: toolbar,
+                        images_upload_url: "/Home/Upload",
+                        height: 600
+                    });
+                },
+                DestroyTinymce: function () {
+                    tinymce.remove("#TxtRelationBodies");
+                },
+                closeDialog: function (done) {
+                    this.DestroyTinymce();
+
+                    this.$nextTick(function () { done(); });
+                },
+                EditCacel: function () {
+                    this.DestroyTinymce();
+                    this.showEdit = false;
+                }
+            },
+            mounted: function () {
+                this.GetData();
+                this.QueryFatePointLeafOnly = false;
+                @await Html.PartialAsync("CommonMounted")
+            }
+        });
+        const plugins = ['advlist anchor autolink autosave code codesample colorpicker colorpicker contextmenu directionality emoticons fullscreen hr image imagetools insertdatetime link lists media nonbreaking noneditable pagebreak preview print save searchreplace spellchecker tabfocus table template textcolor textpattern visualblocks visualchars wordcount']
+        const toolbar = ['searchreplace bold italic underline strikethrough alignleft aligncenter alignright outdent indent  blockquote undo redo removeformat subscript superscript code codesample', 'hr bullist numlist link image charmap preview anchor pagebreak insertdatetime media table emoticons forecolor backcolor fullscreen']
+    </script>
+}

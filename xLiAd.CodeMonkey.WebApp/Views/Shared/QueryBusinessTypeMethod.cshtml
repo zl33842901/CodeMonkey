@@ -1,0 +1,38 @@
+﻿                QueryBusinessTypeMethod: function () {
+                    //var that = this;
+                    //CommonAjaxPost("/api/BusinessTypeApi/GetTree",
+                    //    {},
+                    //    function (data) {
+                    //        that.QueryBusinessType = data.Data.Children;
+                    //    });
+                },
+                QueryBusinessTypeInit: function () {
+                    if (this.QueryBusinessType == null) {
+                        this.QueryBusinessTypeMethod();
+                    }
+                    this.showSelectBusinessType = true;
+                    var that = this;
+                    this.$nextTick(function() {that.$refs.bttree.setCheckedNodes(that.QueryBusinessTypeSelectedNodes);});
+                },
+                QueryBusinessTypeConfirm: function () {
+                    var r = this.$refs.bttree.getCheckedNodes();
+                    var rst = [];
+                    for (var i = 0; i < r.length; i++) {
+                        if (r[i].Children.length < 1) {
+                            rst.push(r[i]);
+                        }
+                    }
+                    this.QueryBusinessTypeSelectedNodes = rst;
+                    this.showSelectBusinessType = false;
+                },
+                QueryBusinessTypeClose: function (tag) {
+                     this.QueryBusinessTypeSelectedNodes.splice(this.QueryBusinessTypeSelectedNodes.indexOf(tag), 1);
+                },
+                QueryBusinessTypeCheckAll: function() {
+                    var that = this;
+                    that.$refs.bttree.setCheckedNodes(that.QueryBusinessType);
+                },
+                QueryBusinessTypeCheckNone: function() {
+                    var that = this;
+                    that.$refs.bttree.setCheckedNodes([]);
+                },

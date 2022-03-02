@@ -1,0 +1,139 @@
+﻿@inject xLiAd.CodeMonkey.Entities.Dtos.IConfigEntity conf
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@(ViewBag.Title ?? "模板项目  --  xliad")</title>
+    <link rel="stylesheet" href="~/css/element-ui/theme-chalk/index.css">
+    <link rel="stylesheet" href="~/css/Common.css" />
+    <link href="~/css/Custom.css" rel="stylesheet" />
+
+    <script src="~/js/Common.js"></script>
+    <script src="~/js/vue.js"></script>
+    <script src="~/js/jquery-1.10.2.js"></script>
+    <script src="~/css/element-ui/index.js"></script>
+
+    <!-- <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>  -->
+</head>
+<body>
+    <div id="app">
+        <div style="height: 100%;width: 100%;position:fixed;z-index: 9999999;background: #fff;opacity:0.5" id="DivCover" v-show="fullscreenLoading">
+            <i class="el-icon-loading" style="position: fixed;top: 50%;left: 50%;font-size: 50px;color: #ccc"></i>
+        </div>
+
+        <el-container class="container" style="height:100%;width: 100%;position:fixed;min-height:100vh;" direction="vertical">
+            <el-header class="header">
+                <div style="width:207px;height:46px;background-image:url(/images/logo.png);display:inline;float:left;margin:5px;cursor:pointer;" v-on:click="MenuCollapse"></div>
+                <div class="title">
+                    <span>xliad 模板项目</span>
+                </div>
+                <div class="author">
+                    <i class="el-icon-goods" style="margin:0 10px 0 0;"><span style="padding-left:5px;">模板项目</span></i>
+                    <i class="el-icon-close" style="margin:0 10px 0 0;"><span style="padding-left:5px;cursor:pointer;" onclick="location = '@(conf.LoginUrl + "?gourl=")'+document.location.href;">退出</span></i>
+                </div>
+            </el-header>
+
+            <el-container style="height:calc(100% - 60px);">
+                <el-aside class="left aside-backcolor" :style="'width:' + (collapse ? '70' : '300') +'px;'">
+                    <el-scrollbar :native="false" style="height:100%">
+                        <el-menu :default-active="activeIndex" :collapse="collapse" class="totalUl" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b">
+                            <el-menu-item index="activeIndex" v-on:click="open('/')"><i class="el-icon-more"></i><span v-if="!collapse">首页</span></el-menu-item>
+                            <el-submenu :index="firstMenu.id" v-for="firstMenu in menus" :key="firstMenu.id">
+                                <template slot="title">
+                                    <i :class="firstMenu.iconClass"></i>
+                                    <span v-show="!collapse">{{ firstMenu.name }}</span>
+                                </template>
+                                <el-menu-item-group v-for="secondMenu in firstMenu.children" :key="secondMenu.id">
+                                    <template slot="title">
+                                        {{ secondMenu.name }}
+                                    </template>
+                                    <el-menu-item v-for="thirdMenu in secondMenu.children" :index="thirdMenu.id"
+                                                  :key="thirdMenu.id" v-on:click="open(thirdMenu.url)">
+                                        {{ thirdMenu.name }}
+                                    </el-menu-item>
+                                </el-menu-item-group>
+                            </el-submenu>
+                        </el-menu>
+                    </el-scrollbar>
+                </el-aside>
+
+                <el-main class="right">
+                    <el-scrollbar :native="false" style="height:100%">
+                        @RenderBody()
+                    </el-scrollbar>
+                </el-main>
+
+            </el-container>
+        </el-container>
+        @await Html.PartialAsync("CommonDialog")
+        @RenderSection("Dialogs", required: false)
+    </div>
+    <script type="text/javascript">
+        var LoginUrlConfig = '@conf.LoginUrl';
+        var Menus = [
+            {
+                name: "职能角色中心",
+                id: "DataDataiiAuthRole",
+                iconClass: "el-icon-date",
+                children: [
+                    {
+                        name: "职能角色设置",
+                        id: "AuthRole",
+                        children: [
+                            { name: "职能角色设置", id: "AuthRole", url: "/AuthRole/Index" }
+                        ]
+                    }
+                ]
+            }
+            ,
+            {
+                name: "变更历史表",
+                id: "DataDataiiChangeHis",
+                iconClass: "el-icon-time",
+                children: [
+                    {
+                        name: "变更历史表设置",
+                        id: "DataiiChangeHis",
+                        children: [
+                            { name: "变更历史表设置", id: "ChangeHis", url: "/ChangeHis/Index" }
+                        ]
+                    }
+                ]
+            }
+            ,
+            {
+                name: "广告位主表",
+                id: "DataDataiiCycle",
+                iconClass: "el-icon-news",
+                children: [
+                    {
+                        name: "广告位主表设置",
+                        id: "DataiiCycle",
+                        children: [
+                            { name: "广告位主表设置", id: "Cycle", url: "/Cycle/Index" }
+                        ]
+                    }
+                ]
+            }
+            ,
+            {
+                name: "Depart",
+                id: "DataDataiiDepart",
+                iconClass: "el-icon-upload",
+                children: [
+                    {
+                        name: "Depart设置",
+                        id: "DataiiDepart",
+                        children: [
+                            { name: "Depart设置", id: "Depart", url: "/Depart/Index" }
+                        ]
+                    }
+                ]
+            }
+        ];
+        var ExcelExportUrl = "@conf.ExcelExportUrl";
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

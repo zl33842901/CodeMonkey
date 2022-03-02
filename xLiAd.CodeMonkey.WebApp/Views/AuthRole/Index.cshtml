@@ -1,0 +1,329 @@
+﻿<el-row style="padding:3px;margin:3px;">
+    <el-breadcrumb separator="/">
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+        <el-breadcrumb-item>角色权限设置</el-breadcrumb-item>
+    </el-breadcrumb>
+</el-row>
+
+<el-row style="width: 100%;margin: 5px 0 5px 0;background-color:#ddd;padding:4px 0 4px 0;" :gutter="10">
+    <el-col :span="3">
+        <el-input type="text" placeholder="请输入关键词" v-model="Query.Key">
+        </el-input>
+    </el-col>
+
+    <el-col :span="4">
+        <el-button type="primary" v-on:click="QueryClick">查询</el-button>
+        <el-button type="primary" v-on:click="InitAdd">新增</el-button>
+    </el-col>
+</el-row>
+
+<el-table :data="tableData" style="width: 100%" class="spHeight">
+
+
+    <el-table-column label="编号" width="80">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">
+                <el-button type="primary" v-on:click="InitEdit(scope.row)">{{ scope.row.Id }}</el-button>
+            </span>
+        </template>
+    </el-table-column>
+
+    <el-table-column label="角色编号" width="90">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.RoleId }}</span>
+        </template>
+    </el-table-column>
+    <el-table-column label="角色名称" width="200">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.RoleName }}({{scope.row.RoleId}})</span>
+        </template>
+    </el-table-column>
+
+    <el-table-column label="负责部门" width="180">
+        <template slot-scope="scope">
+            <el-popover trigger="hover" placement="top">
+                <p v-for="item in ['哈哈哈','嘿嘿嘿']">{{ item }}</p>
+                <div slot="reference" class="name-wrapper">
+                    <el-tag size="medium">哈哈哈</el-tag>
+                </div>
+            </el-popover>
+        </template>
+    </el-table-column>
+
+    <el-table-column label="创建时间" width="180">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">{{ scope.row.Id }}</span>
+        </template>
+    </el-table-column>
+
+
+    <el-table-column label="操作" width="90">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">
+                <el-button type="primary" v-on:click="InitEdit(scope.row)">编辑</el-button>
+            </span>
+        </template>
+    </el-table-column>
+    <el-table-column label="" width="90">
+        <template slot-scope="scope">
+            <span style="margin-left: 1px">
+                <el-button type="danger" v-on:click="DeleteModel(scope.row)">删除</el-button>
+            </span>
+        </template>
+    </el-table-column>
+    <el-table-column></el-table-column>
+
+</el-table>
+<el-row style="width: 100%;margin: 5px 0 5px 0;background-color:#fff;padding:4px 0 4px 0;" :gutter="10">
+    <el-pagination style="width:750px;float:left;" background v-on:size-change="handleSizeChange" v-on:current-change="handleCurrentChange" :current-page="Query.PageIndex"
+                   layout="total, prev, pager, next, sizes, jumper"
+                   :page-sizes="pager.pageSizes"
+                   :total="pager.total">
+    </el-pagination>
+    <img src="~/images/excel.gif" style="float:left;margin:7px;cursor:pointer;" v-on:click="ExportExcel" />
+</el-row>
+@section Dialogs{
+    <el-dialog title="编辑角色配置" :visible.sync="showEdit" width="666px" append-to-body :close-on-click-modal="false">
+        <el-form :model="EditModel" label-width="120px;">
+            <el-form-item label="选择框示例">
+                <el-col :span="20">
+                    <div class="el-input" v-on:click="QueryBusinessTypeInit">
+                        <div class="el-input__inner" style="cursor:pointer;">
+                            <el-tag v-for="item in QueryBusinessTypeSelectedNodes" closable v-on:close="QueryBusinessTypeClose(item)" style="margin:3px;" :key="item.Title">{{item.Title}}</el-tag>
+                        </div>
+                    </div>
+                </el-col>
+            </el-form-item>
+
+            <el-form-item label="角色ID">
+                <el-col :span="20">
+                    <el-input placeholder="RoleId" v-model="EditModel.RoleId"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="角色名称">
+                <el-col :span="20">
+                    <el-input placeholder="RoleId" v-model="EditModel.RoleName"></el-input>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="上传示例" label-width="120px;">
+                <el-col :span="7">
+                    <el-upload class="upload-demo" :show-file-list="false" multiple
+                               action="/Home/Upload" :before-upload="CheckPictureFileType"
+                               :on-success="UploadSuccess">
+                        <el-button size="small" type="primary">点击上传</el-button>
+                        <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，<br />且不超过500kb</div>
+                    </el-upload>
+                </el-col>
+                <el-col :span="10" v-if="EditModel.pic!=null && EditModel.pic != ''">
+                    <a :href="EditModel.pic" target="_blank"><img :src="EditModel.pic" style="max-height:200px;max-width:200px;" /></a>
+                </el-col>
+                <el-col :span="3" v-if="EditModel.pic!=null && EditModel.pic != ''">
+                    <el-button size="small" v-on:click="EditModel.pic = ''">删除图片</el-button>
+                </el-col>
+            </el-form-item>
+
+            <el-form-item label="文本区示例">
+                <el-input type="textarea" placeholder="填写备注" v-model="EditModel.Bak">
+                </el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button v-on:click="showEdit = false">取 消</el-button>
+            <el-button type="primary" v-on:click="SubmitModel">确 定</el-button>
+        </div>
+    </el-dialog>
+
+    @await Html.PartialAsync("QueryBusinessTypePage")
+}
+
+@section Scripts{
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                activeIndex: "AuthRole",
+                @await Html.PartialAsync("CommonData")
+                Query: {
+                    Key:'',
+                    PageSize: 10,
+                    PageIndex: 1
+                },
+                tableData: [],
+                pager: {
+                    pageSizes: [10, 20, 30, 50, 100, 500],
+                    total: 0
+                },
+                exportColumn: {//导出Excel时的列
+                    Id: "编号",
+                    RoleId: "角色编号",
+                    RoleName:"角色名称"
+                },
+                showEdit: false,
+                EditModel: {
+                    Id:0,
+                    RoleId: '',
+                    RoleName: '',
+                    pic:''
+                },
+                EditMode: false,
+                @await Html.PartialAsync("QueryBusinessTypeData")
+            },
+            methods: {
+                @await Html.PartialAsync("QueryBusinessTypeMethod")
+                ExportExcel: function () {
+                    var form = $("<form>");//定义一个form表单
+                    form.attr("style", "display:none");
+                    form.attr("target", "");
+                    form.attr("method", "post");
+                    form.attr("action", ExcelExportUrl);
+                    var hdxls = $("<input>");
+                    hdxls.attr("type", "hidden");
+                    hdxls.attr("name", "column");
+                    hdxls.attr("value", JSON.stringify(this.exportColumn));
+                    var hdstore = $("<input>");
+                    hdstore.attr("type", "hidden");
+                    hdstore.attr("name", "data");
+                    hdstore.attr("value", JSON.stringify(this.tableData));
+                    $("body").append(form);//将表单放置在web中
+                    form.append(hdstore);
+                    form.append(hdxls);
+                    form.submit();//表单提交
+                    //console.log(form)
+                },
+                InitAdd: function () {
+                    this.EditModel.Id = 0;
+                    this.EditModel.RoleId = '';
+                    this.EditModel.RoleName = '';
+                    this.showEdit = true;
+                    this.EditMode = false;
+                },
+                InitEdit: function (m) {
+                    this.EditModel.Id = m.Id;
+                    this.EditModel.RoleId = m.RoleId;
+                    this.EditModel.RoleName = m.RoleName;
+                    this.showEdit = true;
+                    this.EditMode = true;
+
+                },
+                LoadEditData: function () {//编辑提交时，从数据里加载到MODEL
+                },
+                SubmitModel: function () {
+                    if (this.EditMode) {
+                        this.EditSubmit();
+                    } else {
+                        this.AddSubmit();
+                    }
+                },
+                EditSubmit: function () {
+                    this.LoadEditData();
+                    var that = this;
+                    CommonAjaxPost("/AuthRole/Edit",
+                        this.EditModel, function (data) {
+                            if (data.result) {
+                                that.showEdit = false;
+                                that.$message({
+                                    message: '操作成功',
+                                    type: 'success'
+                                });
+                                that.GetData();
+                            } else {
+                                that.$message.error("出错了：" + data.message);
+                            }
+                        });
+                },
+                AddSubmit: function () {
+                    if (this.submitting == true) {
+                        this.$message.error("正在提交数据，请稍候。");
+                        return;
+                    }
+                    this.submitting = true;
+                    this.LoadEditData();
+                    this.EditModel.Deleted = false;
+                    var that = this;
+                    CommonAjaxPost("/AuthRole/Add",
+                        this.EditModel, function (data) {
+                            if (data.result) {
+                                that.showEdit = false;
+                                that.$message({
+                                    message: '操作成功',
+                                    type: 'success'
+                                });
+                                that.GetData();
+                            } else {
+                                that.$message.error("出错了：" + data.message);
+                            }
+                            that.submitting = false;
+                        });
+                },
+                GetData: function () {
+                    var that = this;
+                    CommonAjaxPost("/AuthRole/GetListData",
+                        this.Query,
+                        function (data) {
+                            if (data.result) {
+                                that.tableData = data.listData;
+                                that.pager.total = data.total;
+                            } else {
+                                that.$message.error("出错了：" + data.message);
+                            }
+                        });
+                },
+                UploadSuccess: function (response, file, filelist) {
+                    console.log(response)
+                    console.log(file)
+                    console.log(filelist)
+                    var that = this;
+                    if (response.result) {
+                        that.EditModel.pic = response.data.thumb == null ? response.data.url : response.data.thumb;//
+                        //console.log(that.EditModel.pic);
+                    } else {
+                        that.$message.error("出错了：" + response.message);
+                    }
+                },
+                QueryClick: function () {
+                    this.Query.PageIndex = 1;
+                    this.GetData();
+                },
+                handleSizeChange: function (size) {
+                    this.Query.PageSize = size;
+                    this.GetData();
+                },
+                handleCurrentChange: function (pageIndex) {
+                    this.Query.PageIndex = pageIndex;
+                    this.GetData();
+                },
+                @await Html.PartialAsync("CommonMethod")
+                DeleteModel: function (m) {
+                    var that = this;
+                    this.$confirm('确定要删除此记录吗?', '提示', {
+                      confirmButtonText: '确定',
+                      cancelButtonText: '取消',
+                      type: 'warning'
+                    }).then(function() {
+                        that.DoDelete(m);
+                    }).catch(function() {
+                    });
+                },
+                DoDelete: function (m) {
+                    var that = this;
+                    CommonAjaxPost("/AuthRole/Delete/" + m.Id, {}, function (data) {
+                        if (data.result) {
+                            that.$message({
+                                type: 'success',
+                                message: '删除成功!'
+                            });
+                            that.GetData();
+                        } else {
+                            that.$message.error("出错了：" + data.message);
+                        }
+                    });
+                }
+            },
+            mounted: function () {
+                this.GetData();
+                this.QueryFatePointLeafOnly = false;
+                @await Html.PartialAsync("CommonMounted")
+            }
+        });
+    </script>
+}

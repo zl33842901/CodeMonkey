@@ -1,0 +1,51 @@
+﻿@inject xLiAd.CodeMonkey.Entities.Dtos.IConfigEntity config
+<el-row style="padding:3px;margin:3px;">
+    <el-breadcrumb separator="/">
+        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+    </el-breadcrumb>
+</el-row>
+
+<el-row style="width: 100%;margin: 5px 0 5px 0;background-color:#ddd;padding:4px 0 4px 0;" :gutter="10">
+    <el-table :data="configArray" style="width: 100%" class="spHeight">
+
+
+        <el-table-column label="配置项" width="280">
+            <template slot-scope="scope">
+                <span style="margin-left: 1px">
+                    <el-button type="primary">{{ scope.row.name }}</el-button>
+                </span>
+            </template>
+        </el-table-column>
+
+        <el-table-column label="配置值" width="790">
+            <template slot-scope="scope">
+                <span style="margin-left: 1px">{{ scope.row.value }}</span>
+            </template>
+        </el-table-column>
+
+    </el-table>
+</el-row>
+
+@section Scripts{
+    <script type="text/javascript">
+        var app = new Vue({
+            el: '#app',
+            data: {
+                activeIndex: "activeIndex",
+                config:@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(config)),
+                configArray:[],
+                @await Html.PartialAsync("CommonData")
+            },
+            methods: {
+                @await Html.PartialAsync("CommonMethod")
+            },
+            mounted: function () {
+                for (let i in this.config) {
+                    this.configArray.push({ name: i, value: this.config[i] });
+                }
+                console.log(this.configArray)
+                @await Html.PartialAsync("CommonMounted")
+            }
+        });
+    </script>
+}

@@ -1,0 +1,76 @@
+﻿open: function (url) { location = url; },
+MenuCollapse : function(){
+    if(this.collapse){
+        this.collapse = false;
+        ClearCollapseToLocalStorage();
+    }else{
+        this.collapse = true;
+        SaveCollapseToLocalStorage();
+    }
+},
+LoadCollapse : function(){
+    this.collapse = GetCollapseFromLocalStorage();
+},
+LoadMenuLocal:function(){
+    //var that = this;
+    //CommonAjaxPost("/Menu/GetOnesMenuLocal",
+    //    {},
+    //    function (data) {
+    //        that.MenuLocal = data;
+    //        that.FilterMenuLocal();
+    //        that.LoadAdditionMenu();
+    //    });
+    this.FilterMenuLocal();
+},
+FilterMenuLocal:function(){
+    var mns = Menus;
+    //for(var i = mns.length-1;i>=0;i--){
+    //    var menuName = mns[i].name;
+    //    var sameNameItem = this.MenuLocal.find(function(x){return x.menuName == menuName});
+    //    if(sameNameItem == null || sameNameItem == undefined)
+    //        mns.splice(i,1);
+    //}
+    this.menus = mns;
+},
+LoadAdditionMenu:function(){
+    var that = this;
+    CommonAjaxPost("/BusinessSystem/GetBusinessSystemMenuICanSee",
+        {},
+        function (data) {
+            for(var i = 0;i < data.Data.length;i++){
+                that.menus.push(data.Data[i]);
+            }
+        });
+},
+ShowLogin:function(){
+    this.showLoginDialog = true;
+    this.LoginUrl = this.LoginUrlT + "&" + Math.random();
+    console.log(this.LoginUrl);
+},
+HideLogin:function(){
+    this.showLoginDialog = false;
+    that.$message({
+        message: '操作成功',
+        type: 'success'
+    });
+},
+CheckPictureFileType: function (item) {
+    console.log(item);
+    if (item.name.indexOf(".") < 0) {
+        this.$message.error("只能上传图片！");
+        return false;
+    }
+    var ext = item.name.split('.').pop().toLowerCase();
+    if (ext == "jpg" || ext == "jpeg" || ext == "png")
+    {
+        if(item.size > 512000){
+            this.$message.error("图片最大500K！");
+            return false;
+        }else
+            return true;
+    }
+    else {
+        this.$message.error("只能上传jpg、png格式的图片！");
+        return false;
+    }
+},

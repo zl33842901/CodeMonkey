@@ -1,0 +1,19 @@
+﻿<el-dialog title="选择业务类型" :visible.sync="showSelectBusinessType">
+    <el-tree :data="QueryBusinessType"
+             show-checkbox
+             node-key="Id"
+             default-expand-all
+             ref="bttree"
+             :props="QueryBusinessTypeProps">
+    </el-tree>
+    <el-row>
+        <el-button v-on:click="QueryBusinessTypeCheckAll">全选</el-button>
+        <el-button v-on:click="QueryBusinessTypeCheckNone">全不选</el-button>
+
+    </el-row>
+    <div slot="footer" class="dialog-footer">
+
+        <el-button v-on:click="showSelectBusinessType = false">取 消</el-button>
+        <el-button type="primary" v-on:click="QueryBusinessTypeConfirm" id="BtnBusinessTypeSubmit">确 定</el-button>
+    </div>
+</el-dialog>
