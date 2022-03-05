@@ -19,6 +19,5 @@ dotnet add package xLiAd.CodeMonkey.Generator
 3，反射查找你生成的代理类型，通常如果有代理类型 就使用代理类型，如果没有代理类型就使用原始类型。参见两个 Sample。
 
 ### 注意：
-由于 SourceGenerator 本身的限制，Attribute 需要和 你的服务类在同一个项目中；服务类可见性需要是 public。
-
-由于程序还不完善，还有一些限制：原始类没有构造方法时，报 svc 不被实例化；语句定义不支持 @ 符号；  预计将来的版本会解除这些限制。
+由于 SourceGenerator 本身的限制，Attribute 需要和 你的服务类在同一个项目中；
+另：服务类可见性现在要求是 public。

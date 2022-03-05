@@ -30,5 +30,9 @@ namespace xLiAd.CodeMonkey.Generator
         /// 返回值 和 Out Ref 类型参数 object[]
         /// </summary>
         internal const string ResultAndOuts = "$ResultAndOuts$";
+        /// <summary>
+        /// 报错时的异常信息
+        /// </summary>
+        internal const string Exception = "$Exception$";
     }
 }

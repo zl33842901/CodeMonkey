@@ -25,15 +25,19 @@ namespace xLiAd.CodeMonkey.Generator
             }
         }
 
-        private void SetValue(string name, string value, AopAttributeDto dto)
+        private void SetValue(string name, string value, AopAttributeDto dto, bool withAt)
         {
+            var v = withAt ? value.Replace("\"\"", "\"") : System.Text.RegularExpressions.Regex.Unescape(value);
             switch (name)
             {
                 case "BeforeBody":
-                    dto.BeforeBody = value.Replace("\\\"", "\"").Replace("\\\\", "\\");
+                    dto.BeforeBody = v;
                     break;
                 case "AfterBody":
-                    dto.AfterBody = value.Replace("\\\"", "\"").Replace("\\\\", "\\");
+                    dto.AfterBody = v;
+                    break;
+                case "ExceptionBody":
+                    dto.ExceptionBody = v;
                     break;
                 case "Usings":
                     dto.Usings = value?.Split(new string[] { "\n" }, StringSplitOptions.None).Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).ToArray() ?? new string[0];
@@ -58,7 +62,9 @@ namespace xLiAd.CodeMonkey.Generator
                     var name = property.Identifier.ValueText;
                     var value = property.ExpressionBody.Expression.ToString();
                     if (value.StartsWith("\"") && value.EndsWith("\""))
-                        SetValue(name, value.Substring(1, value.Length - 2), aopAttributeDto);
+                        SetValue(name, value.Substring(1, value.Length - 2), aopAttributeDto, false);
+                    else if(value.StartsWith("@\"") && value.EndsWith("\""))
+                        SetValue(name, value.Substring(2, value.Length - 3), aopAttributeDto, true);
                 }
                 else if(member is FieldDeclarationSyntax field)
                 {
@@ -68,10 +74,12 @@ namespace xLiAd.CodeMonkey.Generator
                     var name = field.Declaration.Variables[0].Identifier.ValueText;
                     var value = field.Declaration.Variables[0].Initializer.Value.ToString();
                     if(value.StartsWith("\"") && value.EndsWith("\""))
-                        SetValue(name, value.Substring(1, value.Length - 2), aopAttributeDto);
+                        SetValue(name, value.Substring(1, value.Length - 2), aopAttributeDto, false);
+                    else if (value.StartsWith("@\"") && value.EndsWith("\""))
+                        SetValue(name, value.Substring(2, value.Length - 3), aopAttributeDto, true);
                 }
             }
-            if (aopAttributeDto.AfterBody != null || aopAttributeDto.BeforeBody != null)
+            if (aopAttributeDto.AfterBody != null || aopAttributeDto.BeforeBody != null || aopAttributeDto.ExceptionBody != null)
             {
                 if (classSyntax.AttributeLists.SelectMany(x => x.Attributes).Any(x => x.Name.ToString() == "ForAllClass" || x.Name.ToString() == "ForAllClassAttribute"))
                     aopAttributeDto.ForAllClass = true;

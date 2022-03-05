@@ -149,6 +149,14 @@ namespace xLiAd.CodeMonkey.Generator
                 builder.AppendLine("$(OtherFieldInit)$");
                 builder.AppendLine("\t\t}");
             }
+            if (!constructors.Any())
+            {
+                builder.AppendLine($"\t\tpublic {this.ClassName}()");
+                builder.AppendLine("\t\t{");
+                builder.AppendLine($"\t\t\tthis.svc = new {service.Name}();");
+                builder.AppendLine("$(OtherFieldInit)$");
+                builder.AppendLine("\t\t}");
+            }
 
             var allProperties = service.GetMembers().OfType<IPropertySymbol>().Select(x => x.Name).ToArray();
 
@@ -182,27 +190,6 @@ namespace xLiAd.CodeMonkey.Generator
             var result = builder.ToString().Replace("$(OtherFieldInit)$", FieldsInitStringBuilder.ToString());
             //Debugger.Launch();
             return result;
-        }
-        private IMethodSymbol FindImpMethod(IMethodSymbol method)
-        {
-            if (method == null)
-                return null;
-            var ms = service.GetMembers(method.Name).OfType<IMethodSymbol>().ToArray();
-            if (ms.Length == 1)
-                return ms[0];
-            ms = ms.Where(x => x.Parameters == method.Parameters).ToArray();
-            if (ms.Length == 1)
-                return ms[0];
-            return null;
-        }
-        private IPropertySymbol FindImpProperty(IPropertySymbol property)
-        {
-            if (property == null)
-                return null;
-            var ms = service.GetMembers(property.Name).OfType<IPropertySymbol>().ToArray();
-            if (ms.Length == 1)
-                return ms[0];
-            return null;
         }
         private string GetRefKindString(RefKind kind)
         {
@@ -239,11 +226,12 @@ namespace xLiAd.CodeMonkey.Generator
 
             builder.AppendLine($"\t\t{GetAccessibility(method)}{(method.IsStatic ? " static": null)} {(method.IsAsync ? "async ": String.Empty)}{method.ReturnType} {method.Name}({parametersString})");
             builder.AppendLine("\t\t{");
+            builder.AppendLine("\t\t\ttry{");
 
             foreach (var cutter in cutters)
-                builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.BeforeBody, method.Name, hongParamInNames, "null", "null")}");
+                builder.AppendLine($"\t\t\t\t{ReplaceNames(cutter.AopAttribute.BeforeBody, method.Name, hongParamInNames, "null", "null", "null")}");
 
-            builder.AppendLine($"\t\t\t{(isvoid ? string.Empty : "var result = ")}{(method.IsAsync ? "await " : String.Empty)}{GetServiceOrClassName(method)}.{method.Name}({parameterNamesString});");
+            builder.AppendLine($"\t\t\t\t{(isvoid ? string.Empty : "var result = ")}{(method.IsAsync ? "await " : String.Empty)}{GetServiceOrClassName(method)}.{method.Name}({parameterNamesString});");
 
             var hongResult = isvoid ? "new object[0]" : "new object[]{ result }";
             var hongTmpRO = new List<string>();
@@ -253,17 +241,25 @@ namespace xLiAd.CodeMonkey.Generator
             var hongResultAndOut = $"new object[] {{{string.Join(",", hongTmpRO)}}}";
 
             foreach(var cutter in cutters.Reverse())
-                builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.AfterBody, method.Name, hongParamInNames, hongResult, hongResultAndOut)}");
+                builder.AppendLine($"\t\t\t\t{ReplaceNames(cutter.AopAttribute.AfterBody, method.Name, hongParamInNames, hongResult, hongResultAndOut, "null")}");
 
-            builder.AppendLine($"\t\t\treturn{(isvoid ? string.Empty : " result")};");
+            builder.AppendLine($"\t\t\t\treturn{(isvoid ? string.Empty : " result")};");
+            builder.AppendLine("\t\t\t}");
+            builder.AppendLine("\t\t\tcatch(Exception ex){");
+
+            foreach (var cutter in cutters)
+                builder.AppendLine($"\t\t\t\t{ReplaceNames(cutter.AopAttribute.ExceptionBody, method.Name, hongParamInNames, "null", "null", "ex")}");
+
+            builder.AppendLine("\t\t\t\tthrow;");
+            builder.AppendLine("\t\t\t}");
             builder.AppendLine("\t\t}");
             return builder.ToString();
         }
 
-        private string ReplaceNames(string source, string name, string paramsIn, string result, string resultAndOuts)
+        private string ReplaceNames(string source, string name, string paramsIn, string result, string resultAndOuts, string exception)
         {
-            var r = source.Replace(HongHelper.ClassName, this.ClassName).Replace(HongHelper.ProxiedClassName, service.Name).Replace(HongHelper.Name, name)
-                .Replace(HongHelper.ParamsIn, paramsIn).Replace(HongHelper.Result, result).Replace(HongHelper.ResultAndOuts, resultAndOuts);
+            var r = source?.Replace(HongHelper.ClassName, this.ClassName).Replace(HongHelper.ProxiedClassName, service.Name).Replace(HongHelper.Name, name)
+                .Replace(HongHelper.ParamsIn, paramsIn).Replace(HongHelper.Result, result).Replace(HongHelper.ResultAndOuts, resultAndOuts).Replace(HongHelper.Exception, exception);
             return r;
         }
 
@@ -305,29 +301,48 @@ namespace xLiAd.CodeMonkey.Generator
             if(property.GetMethod != null)
             {
                 builder.AppendLine($"\t\t\tget {{");
-                foreach (var cutter in cutters)
-                    builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.BeforeBody, property.Name, "new object[0]", "null", "null")}");
+                builder.AppendLine("\t\t\t\ttry{");
 
-                builder.AppendLine($"\t\t\t\tvar result = {GetServiceOrClassName(property)}.{property.Name};");
+                foreach (var cutter in cutters)
+                    builder.AppendLine($"\t\t\t\t{ReplaceNames(cutter.AopAttribute.BeforeBody, property.Name, "new object[0]", "null", "null", "null")}");
+
+                builder.AppendLine($"\t\t\t\t\tvar result = {GetServiceOrClassName(property)}.{property.Name};");
 
                 foreach (var cutter in cutters.Reverse())
-                    builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.AfterBody, property.Name, "new object[0]", "new object[] { result }", "new object[] { result }")}");
+                    builder.AppendLine($"\t\t\t\t{ReplaceNames(cutter.AopAttribute.AfterBody, property.Name, "new object[0]", "new object[] { result }", "new object[] { result }", "null")}");
 
-                builder.AppendLine($"\t\t\t\treturn result;");
+                builder.AppendLine($"\t\t\t\t\treturn result;");
+                builder.AppendLine($"\t\t\t\t}}");
+                builder.AppendLine("\t\t\t\tcatch(Exception ex){");
+
+                foreach (var cutter in cutters)
+                    builder.AppendLine($"\t\t\t\t{ReplaceNames(cutter.AopAttribute.ExceptionBody, property.Name, "new object[0]", "new object[] { result }", "new object[] { result }", "ex")}");
+
+                builder.AppendLine("\t\t\t\tthrow;");
+                builder.AppendLine("\t\t\t\t}");
                 builder.AppendLine($"\t\t\t}}");
             }
             if(property.SetMethod != null)
             {
                 builder.AppendLine($"\t\t\tset {{");
+                builder.AppendLine("\t\t\t\ttry{");
 
                 foreach (var cutter in cutters)
-                    builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.BeforeBody, property.Name, "new object[] { value }", "null", "null")}");
+                    builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.BeforeBody, property.Name, "new object[] { value }", "null", "null", "null")}");
 
                 builder.AppendLine($"\t\t\t\t{GetServiceOrClassName(property)}.{property.Name} = value;");
 
                 foreach (var cutter in cutters.Reverse())
-                    builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.AfterBody, property.Name, "new object[] { value }", "new object[0]", "new object[0]")}");
+                    builder.AppendLine($"\t\t\t{ReplaceNames(cutter.AopAttribute.AfterBody, property.Name, "new object[] { value }", "new object[0]", "new object[0]", "null")}");
 
+                builder.AppendLine($"\t\t\t\t}}");
+                builder.AppendLine("\t\t\t\tcatch(Exception ex){");
+
+                foreach (var cutter in cutters)
+                    builder.AppendLine($"\t\t\t\t{ReplaceNames(cutter.AopAttribute.ExceptionBody, property.Name, "new object[] { value }", "new object[0]", "new object[0]", "ex")}");
+
+                builder.AppendLine("\t\t\t\tthrow;");
+                builder.AppendLine("\t\t\t\t}");
                 builder.AppendLine($"\t\t\t}}");
             }
             builder.AppendLine("\t\t}");

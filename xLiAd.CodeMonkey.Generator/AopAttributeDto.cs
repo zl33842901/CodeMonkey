@@ -10,6 +10,8 @@ namespace xLiAd.CodeMonkey.Generator
 
         public string AfterBody { get; set; }
 
+        public string ExceptionBody { get; set; }
+
         public IEnumerable<string> Usings { get; set; } = new string[0];
 
         public IEnumerable<string> Injects { get; set; } = new string[0];
